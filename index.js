@@ -1,1 +1,98 @@
 // implement your API here
+const express = require('express'); // installing express dependency - npm i express
+
+const Users = require('./data/db'); // database library
+
+const server = express(); // creating server variable
+
+server.use(express.json()); // need to parse JSON
+
+// routes or endpoints
+
+server.get('/', (req, res) => {
+    res.send({ hello: 'Is this working?'})
+})
+
+// When the client makes a GET request to /api/users:
+server.get('/api/users', (req, res) => {
+    Users.find()
+    .then(users => {
+        res.status(200).json(users)
+
+    })
+    .catch(error => {
+        console.log(error)
+        res.status(500).json({
+            errorMessage: "The users information could not be retrieved."
+        })
+    })
+})
+
+// When the client makes a POST request to /api/users:
+server.post('/api/users', (req, res) => {
+    const userData = req.body;
+    Users.insert(userData)
+        .then(user => {
+            res.status(201).json(user)
+            console.log(user)
+        })
+        .catch(error => {
+            console.log(error)
+            res.status(500).json({
+                errorMessage: "There was an error while saving the user to the database"
+            })
+        })
+})
+
+// When the client makes a GET request to /api/users/:id:
+server.get('/api/users/:id', (req, res) => {
+    const specificData = req.params.id;
+    Users.findById(specificData)
+        .then(specificUser => {
+            res.status(201).json(specificUser)
+            console.log(specificUser)
+        })
+        .catch(error => {
+            console.log(error)
+            res.status(500).json({
+                errorMessage: "The user information could not be retrieved."
+            })
+        })
+})
+
+// When the client makes a DELETE request to /api/users/:id:
+server.delete('/api/users/:id', (req, res) => {
+    const userToDelete = req.params.id;
+    Users.remove(userToDelete)
+        .then(deleted => {
+            res.status(200).json(deleted)
+            console.log('User Deleted: ', deleted)
+        })
+        .catch(error => {
+            console.log(error)
+            res.status(500).json({
+                errorMessage: "The user could not be removed"
+            })
+        })
+})
+
+// When the client makes a PUT request to /api/users/:id:
+server.put('/api/users/:id', (req, res) => {
+    const userIdToUpdate = req.params.id;
+    const userToUpdate = req.body;
+    Users.update(userIdToUpdate, userToUpdate)
+        .then(update => {
+            res.status(200).json(update)
+            console.log(update)
+        })
+        .catch(error => {
+            console.log(error)
+            res.status(500).json({
+                errorMessage: "The user information could not be modified."
+            })
+        })
+})
+
+
+const port = 8000;
+server.listen(port, () => console.log(`\n** api on port: ${port} ** \n`))
