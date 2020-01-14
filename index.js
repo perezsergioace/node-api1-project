@@ -18,7 +18,6 @@ server.get('/api/users', (req, res) => {
     Users.find()
     .then(users => {
         res.status(200).json(users)
-
     })
     .catch(error => {
         console.log(error)
@@ -30,11 +29,16 @@ server.get('/api/users', (req, res) => {
 
 // When the client makes a POST request to /api/users:
 server.post('/api/users', (req, res) => {
-    const userData = req.body;
-    Users.insert(userData)
+    const { name, bio} = req.body;
+    Users.insert(req.body)
         .then(user => {
-            res.status(201).json(user)
-            console.log(user)
+            if (!name || !bio) {
+                res.status(400).json({
+                    errorMessage: "Please provide name and bio for the user."
+                })
+            } else {
+                res.status(201).json(user)
+            }
         })
         .catch(error => {
             console.log(error)
@@ -48,9 +52,15 @@ server.post('/api/users', (req, res) => {
 server.get('/api/users/:id', (req, res) => {
     const specificData = req.params.id;
     Users.findById(specificData)
-        .then(specificUser => {
-            res.status(201).json(specificUser)
-            console.log(specificUser)
+        .then(specificData => {
+            if (specificData) {
+                res.status(201).json(specificData)
+                console.log(specificData)
+            } else {
+                res.status(404).json({
+                    message: "The user with the specific ID does not exist."
+                })
+            }
         })
         .catch(error => {
             console.log(error)
@@ -65,8 +75,14 @@ server.delete('/api/users/:id', (req, res) => {
     const userToDelete = req.params.id;
     Users.remove(userToDelete)
         .then(deleted => {
-            res.status(200).json(deleted)
-            console.log('User Deleted: ', deleted)
+            if (deleted) {
+                res.status(200).json(deleted)
+                console.log('User Deleted: ', deleted)
+            } else {
+                res.status(404).json({
+                    errorMessage: "The user with the sepcified ID does not exist."
+                })
+            }
         })
         .catch(error => {
             console.log(error)
@@ -79,11 +95,24 @@ server.delete('/api/users/:id', (req, res) => {
 // When the client makes a PUT request to /api/users/:id:
 server.put('/api/users/:id', (req, res) => {
     const userIdToUpdate = req.params.id;
-    const userToUpdate = req.body;
-    Users.update(userIdToUpdate, userToUpdate)
-        .then(update => {
-            res.status(200).json(update)
-            console.log(update)
+    const { name, bio } = req.body;
+    if (!name || !bio) {
+        res.status(400).json({
+            errorMessage: "Please provide name and bio for the user"
+        })
+    }
+    Users.update(userIdToUpdate, {name, bio})
+        .then(UpdateUser => {
+            if (UpdateUser) {
+                Users.findById(userIdToUpdate)
+                .then(user => {
+                    res.status(201).json(user);
+                })
+            } else {
+                res.status(404).json({
+                    errorMessage: "The user with the specified ID does not exist."
+                })
+            }
         })
         .catch(error => {
             console.log(error)
